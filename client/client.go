@@ -67,7 +67,7 @@ func main() {
 	var addr string = "localhost"
 
 	for {
-		allServers, _ := logger.ListRegisteredServer()
+		allServers, _ := logger.ListAllServers()
 		rand.Seed(time.Now().UnixNano())
 
 		// Create a slice to store the values

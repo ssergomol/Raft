@@ -8,26 +8,25 @@ import (
 	"github.com/ssergomol/raft/utils"
 )
 
-const registryFileName string = "registry.txt"
+const serversFileName string = "all-servers.txt"
+const serverStateFileName string = "server-state.txt"
 
-// RegisterServer appends a registry log into registry for server
-func RegisterServer(serverName string, port string) error {
-	var err = utils.CreateFileIfNotExists(registryFileName)
+func AddServer(serverName string, port string) error {
+	var err = utils.CreateFileIfNotExists(serversFileName)
 	if err != nil {
 		return err
 	}
 	registryLog := serverName + "," + port + "\n"
-	err = utils.WriteToFile(registryFileName, registryLog)
+	err = utils.WriteToFile(serversFileName, registryLog)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-// ListRegisteredServer returns a mapping of serverName to corresponding port
-func ListRegisteredServer() (map[string]int, error) {
+func ListAllServers() (map[string]int, error) {
 	m := make(map[string]int)
-	registeryLines, err := utils.ReadFile(registryFileName)
+	registeryLines, err := utils.ReadFile(serversFileName)
 	if err != nil {
 		return m, err
 	}
@@ -38,8 +37,6 @@ func ListRegisteredServer() (map[string]int, error) {
 	}
 	return m, nil
 }
-
-const serverStateFileName string = "server-state.txt"
 
 func PersistServerState(serverStateLog string) error {
 	var err = utils.CreateFileIfNotExists(serverStateFileName)

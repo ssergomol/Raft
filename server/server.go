@@ -165,7 +165,7 @@ func (s *Server) handleLogRequest(message string) string {
 }
 
 func (s *Server) commitLogEntries() {
-	allNodes, _ := logger.ListRegisteredServer()
+	allNodes, _ := logger.ListAllServers()
 	aliveNodes := len(allNodes) - len(s.peerdata.SuspectedNodes)
 	for i := s.serverState.CommitLength; i < len(s.Logs); i++ {
 		var acks = 0
@@ -243,7 +243,7 @@ func (s *Server) checkForElectionResult() {
 			totalVotes += 1
 		}
 	}
-	allNodes, _ := logger.ListRegisteredServer()
+	allNodes, _ := logger.ListAllServers()
 	aliveNodes := len(allNodes) - len(s.peerdata.SuspectedNodes)
 
 	if (totalVotes >= (aliveNodes+1)/2) || aliveNodes == 1 {
@@ -268,7 +268,7 @@ func (s *Server) startElection() {
 	}
 
 	voteRequest := model.NewVoteRequest(s.serverState.Name, s.serverState.CurrentTerm, len(s.Logs), lastTerm)
-	allNodes, _ := logger.ListRegisteredServer()
+	allNodes, _ := logger.ListAllServers()
 	for node, port := range allNodes {
 		if node != s.serverState.Name {
 			s.sendMessageToFollowerNode(voteRequest.String(), port)
@@ -299,7 +299,7 @@ func (s *Server) syncUp() {
 	ticker := time.NewTicker(BroadcastPeriod * time.Millisecond)
 	for t := range ticker.C {
 		fmt.Println("sending heartbeat at: ", t)
-		allServers, _ := logger.ListRegisteredServer()
+		allServers, _ := logger.ListAllServers()
 		for sname, sport := range allServers {
 			if sname != s.serverState.Name {
 				s.replicateLog(sname, sport)
@@ -321,7 +321,7 @@ func main() {
 	electionTimeoutInterval := rand.Intn(int(ElectionMaxTimeout)-int(ElectionMinTimeout)) + int(ElectionMinTimeout)
 	electionModule := model.NewElectionModule(electionTimeoutInterval)
 
-	err = logger.RegisterServer(*serverName, *port)
+	err = logger.AddServer(*serverName, *port)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -460,7 +460,7 @@ func (s *Server) handleConn(w http.ResponseWriter, r *http.Request) {
 					response = "error while logging command"
 				}
 
-				allServers, _ := logger.ListRegisteredServer()
+				allServers, _ := logger.ListAllServers()
 				for sname, sport := range allServers {
 					s.replicateLog(sname, sport)
 				}
@@ -472,7 +472,7 @@ func (s *Server) handleConn(w http.ResponseWriter, r *http.Request) {
 			}
 		} else if s.currentRole != "leader" && response == "" {
 
-			allServers, _ := logger.ListRegisteredServer()
+			allServers, _ := logger.ListAllServers()
 			fmt.Println("Current leader:", s.leaderNodeId)
 			resp, err := http.Post("http://localhost:"+strconv.Itoa(allServers[s.leaderNodeId]),
 				"text/plain", bytes.NewBuffer(body))
@@ -517,7 +517,7 @@ func (s *Server) handleConn(w http.ResponseWriter, r *http.Request) {
 					response = "error while logging command"
 				}
 
-				allServers, _ := logger.ListRegisteredServer()
+				allServers, _ := logger.ListAllServers()
 				for sname, sport := range allServers {
 					s.replicateLog(sname, sport)
 				}
@@ -529,7 +529,7 @@ func (s *Server) handleConn(w http.ResponseWriter, r *http.Request) {
 			}
 		} else if s.currentRole != "leader" && response == "" {
 
-			allServers, _ := logger.ListRegisteredServer()
+			allServers, _ := logger.ListAllServers()
 			fmt.Println("Current leader:", s.leaderNodeId)
 
 			baseURL := "http://localhost:" + strconv.Itoa(allServers[s.leaderNodeId])
